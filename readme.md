@@ -1,6 +1,6 @@
 # 3D Processing Pipeline
 
-A comprehensive workflow for processing 3D models from video footage.
+A comprehensive workflow for processing 3D models from video footage. This is a fork code from Lauren Olinger's 3d Modeling repository suited for Windows and OneDrive users. 
 
 ## Overview
 
@@ -8,8 +8,8 @@ This project provides a set of Python scripts to automate the workflow of proces
 
 ## Requirements
 
-- Agisoft Metashape Pro (v2.1.1 or later)
-- Python 3.9 (for both local environment and Metashape compatibility)
+- Agisoft Metashape Pro (v2.3.3 or later)
+- Python 3.12 (for both local environment and Metashape compatibility)
 - FFmpeg (for video frame extraction in Step 0)
 - Required Python packages (specific versions in `requirements.txt`):
   - PyYAML
@@ -18,7 +18,8 @@ This project provides a set of Python scripts to automate the workflow of proces
   - opencv-python
   - matplotlib
   - pillow
-- **Note:** This pipeline has been developed and tested primarily on macOS. Compatibility and performance on Windows or Linux are not guaranteed.
+- **Note 1.0:** This workflow has been altered to preform on Windows. This has been tested on OneDrive and hard drive devices, however, performance is not guaranteed. For macOS compatibility, use 3d modeling repository by Lauren Olinger at https://github.com/laurenkolinger/3d . 
+
 
 ## Project Structure
 
@@ -59,7 +60,8 @@ This project provides a set of Python scripts to automate the workflow of proces
 
 Clone this repository to your local machine:
 ```bash
-git clone https://github.com/laurenkolinger/3d.git
+git clone https://github.com/cheyennegoodman/GOODMAN_Coral_Damselfish_3D_Models.git
+
 cd 3d
 ```
 
@@ -114,7 +116,7 @@ Make sure to:
 
 The pipeline uses a clean, standardized naming system for all outputs:
 
-- **Model ID Format:** All file names use the exact Model ID (e.g., `TCRMP20241014_3D_BWR_T2`)
+- **Model ID Format:** All file names use the exact Model ID (e.g., `04_10_2026_PLOT_18`)
 - **No Suffixes:** Files are named simply as `{MODEL_ID}.ext`
 - **Organized Structure:** 
   - Orthomosaics and models get their own subdirectories: `output/orthomosaics/{MODEL_ID}/` and `output/models/{MODEL_ID}/`
@@ -146,11 +148,11 @@ The pipeline requires dependencies in two Python environments:
 
 Create a Python virtual environment in your project:
 ```bash
-# Create virtual environment in project directory using Python 3.9
-python3.9 -m venv {PROJECT_DIR}/.venv
+# Create virtual environment in project directory using Python 3.12
+python3.12 -m venv {PROJECT_DIR}/venv312
 
 # Activate the virtual environment
-source {PROJECT_DIR}/.venv/bin/activate
+{PROJECT_DIR}\venv312\Scripts\activate.ps1
 
 # Install dependencies
 pip install -r requirements.txt
@@ -158,11 +160,15 @@ pip install -r requirements.txt
 
 #### Running Metashape Scripts
 
-To run Metashape scripts with the correct Python environment, you'll need to set the PYTHONPATH to point to your virtual environment's site-packages. This ensures Metashape uses the packages from your virtual environment while maintaining compatibility with Metashape's Python 3.9.
+To run Metashape scripts with the correct Python environment, you'll need to set the PYTHONPATH to point to your virtual environment's site-packages and make your project directory into a variable. This ensures Metashape uses the packages from your virtual environment while maintaining compatibility with Metashape's Python 3.12.
 
 The general format for running Metashape scripts is:
 ```bash
-PYTHONPATH={PROJECT_DIR}/.venv/lib/python3.9/site-packages /Applications/MetashapePro.app/Contents/MacOS/MetashapePro -r src/stepX.py {PROJECT_DIR}
+$env:PROJECT_DIR = $project_dir # make your project directory a variable
+
+$env:PYTHONPATH = "$project_dir\venv312\Lib\site-packages" # create a python path to the project directory so Agisoft Metashape uses the correct virtual environment (venv312)
+
+& "C:\Program Files\Agisoft\Metashape Pro\metashape.exe" -r src\stepX.py # Agisoft Metashape access the virtual environment 
 ```
 
 Where `stepX.py` is the specific step you want to run (step1.py, step2.py, etc.) and `{PROJECT_DIR}` is the path to your project directory containing `analysis_params.yaml`.
@@ -175,10 +181,9 @@ The complete processing workflow consists of the following steps:
 2. **Initial 3D Processing** (step1.py): Process extracted frames to create initial 3D models
 3. **Manual Quality Check & Alignment**: Check and align models (manual step)
 4. **Chunk Management** (step2.py): Organize chunks by site
-5. **Manual Straightening & Scaling**: Straighten and scale models (manual step)
-6. **Model Processing and Exports** (step3.py): Add scale bars, remove small components, export assets
+5. **Model Processing and Exports** (step3.py): Add scale bars, remove small components, export assets
+6. **Manual Straightening & Scaling**: Straighten and scale models (manual step)
 7. **Manual Touchups**: Review and touch up models (manual step)
-8. **Final Exports & Web Publishing** (step4.py): Create final exports and upload to Sketchfab
 
 **Note:** Each script will prompt for the project directory containing the `analysis_params.yaml` file if not provided as a command-line argument. This allows processing different projects without code modifications, as source files will be linked to individual project directories dynamically for each run.
 
@@ -199,7 +204,9 @@ Scans `video_source/` for videos, extracts frames to `processing/frames/`, and c
 Performs initial 3D reconstruction using extracted frames. Creates batched PSX files with multiple models grouped for efficiency.
 
 ```bash
-PYTHONPATH={PROJECT_DIR}/.venv/lib/python3.9/site-packages /Applications/MetashapePro.app/Contents/MacOS/MetashapePro -r src/step1.py {PROJECT_DIR}
+$env:PYTHONPATH = "$project_dir\venv312\Lib\site-packages"
+
+& "C:\Program Files\Agisoft\Metashape Pro\metashape.exe" -r src\step1.py
 ```
 
 Groups models into batches, aligns cameras, builds depth maps, creates 3D models with textures, and saves to `processing/psxraw/`.
@@ -217,7 +224,9 @@ After Step 1, manually check the quality of generated models:
 Consolidates chunks by site to prepare for final processing.
 
 ```bash
-PYTHONPATH={PROJECT_DIR}/.venv/lib/python3.9/site-packages /Applications/MetashapePro.app/Contents/MacOS/MetashapePro -r src/step2.py {PROJECT_DIR}
+$env:PYTHONPATH = "$project_dir\venv312\Lib\site-packages"
+
+& "C:\Program Files\Agisoft\Metashape Pro\metashape.exe" -r src\step2.py
 ```
 
 Groups models by site and creates new PSX files organized by site in `output/psx/`.
@@ -252,7 +261,7 @@ This step processes models with scaling, removes small components, and exports o
 
 ```bash
 # Run automatic scaling first (detects coded targets)
-/Applications/MetashapePro.app/Contents/MacOS/MetashapePro -r src/step3.py {PROJECT_DIR}
+& "C:\Program Files\Agisoft\Metashape Pro\metashape.exe" -r src\step3.py
 ```
 
 **If automatic scaling fails or no coded targets are present:**
@@ -264,20 +273,22 @@ This step processes models with scaling, removes small components, and exports o
 python src/utility/reset_step1.py {PROJECT_DIR}
 
 # Re-run Step 2 (this is pretty quick)
-PYTHONPATH={PROJECT_DIR}/.venv/lib/python3.9/site-packages /Applications/MetashapePro.app/Contents/MacOS/MetashapePro -r src/step2.py {PROJECT_DIR}
+$env:PYTHONPATH = "$project_dir\venv312\Lib\site-packages" 
+
+& "C:\Program Files\Agisoft\Metashape Pro\metashape.exe" -r src\step2.py
 
 # Manually straighten and add scale bars in Metashape GUI (see Manual Step above)
 # Then run manual scale processing:
-/Applications/MetashapePro.app/Contents/MacOS/MetashapePro -r src/step3_manualScale.py {PROJECT_DIR}
+
+& "C:\Program Files\Agisoft\Metashape Pro\metashape.exe" -r src\step3.py
 ```
 
 **Alternative: Start with Manual Scaling**
 If you know there are no coded targets or prefer manual scaling from the start, skip `step3.py` and go directly to the manual workflow above.
 
 **Both approaches produce identical outputs:**
-- Orthomosaics: `output/orthomosaics/{MODEL_ID}/{MODEL_ID}.tif`
 - Models: `output/models/{MODEL_ID}/{MODEL_ID}.obj` 
-- Reports: `output/reports/{MODEL_ID}.pdf`
+- Reports: `processing/reports/{MODEL_ID}.pdf`
 
 ### Manual Step: Model Review and Touchups
 
@@ -286,16 +297,6 @@ After Step 3, manually review and touch up the models:
 1. Open each project in Metashape
 2. For each chunk: review orthomosaic and textured model quality, fill small holes if needed, adjust texture blending, verify scale bars and small component removal
 3. Save the project
-
-### Step 4: Final Exports and Web Publishing
-
-Creates final high-resolution outputs and uploads decimated models to Sketchfab for web viewing.
-
-```bash
-/Applications/MetashapePro.app/Contents/MacOS/MetashapePro -r src/step4.py {PROJECT_DIR}
-```
-
-Creates decimated models for web, uploads to Sketchfab (if configured), exports high-resolution assets to `output/final/`.
 
 ## Configuration
 
@@ -360,7 +361,7 @@ This Python script lists the available GPUs that Metashape can detect and use. T
 **Usage:**
 ```bash
 # Run using Metashape's Python environment
-/Applications/MetashapePro.app/Contents/MacOS/MetashapePro -r src/utility/enumerate_gpus.py
+C:\Program Files\Agisoft\Metashape Pro\metashape.exe" -r src/utility/enumerate_gpus.py
 ```
 
 ## Troubleshooting
@@ -372,8 +373,8 @@ This Python script lists the available GPUs that Metashape can detect and use. T
    If you encounter import errors for packages like numpy, pandas, or PyYAML when running scripts through Metashape, you'll need to install these packages in Metashape's Python environment. Use the provided installation scripts:
    
    ```bash
-   # On macOS/Linux
-   ./src/legacy/install_metashape_deps.sh
+   # On Windows
+   C:\Program Files\Agisoft\Metashape Pro\metashape.exe" pip install -r requirements.txt
    ```
 
 2. **PSX files not generated**
@@ -386,7 +387,13 @@ This Python script lists the available GPUs that Metashape can detect and use. T
 
 4. **Metashape Python version mismatch**
    
-   If your Metashape version uses a different Python version than 3.9, you may need to modify the installation scripts to point to the correct Python interpreter.
+   If your Metashape version uses a different Python version than 3.12, you may need to modify the installation scripts to point to the correct Python interpreter.
+   
+5. **Metashape unable to communicate with Python environment**
+  If you use a hard drive, Agisoft Metashape must be in the same path as your project directory. Use your device's local storage or Cloud or add Metashape in your path.
+  
+6. **Inaccurate Model Replication **
+  If your models can not be replicated, edit extraction_rate from `{PROJECT_DIR}/analysis_params.yaml`. If problem still occurs manually check frames from Step0.py and delete unnecessary/ low quality frames. 
 
 ## Field Methods
 
